@@ -28,42 +28,42 @@ This project utilizes Google Cloud CLI and BigQuery to build an ETL pipeline for
 4. Update and install the gcloud CLI
 
  ```bash
- sudo apt-get update && sudo apt-get install google-cloud-cli
+ $ sudo apt-get update && sudo apt-get install google-cloud-cli
  ```
 
 5. Run gcloud init to get started:
 
  ```bash
- gcloud init
+ $ gcloud init
  ```
 
 6. Using gcloud interactive shell
 
  ```bash
- gcloud beta interactive
+ $ gcloud beta interactive
  ```
 
 ## Step2: Download NY_taxi 2024-01 to 2024-06 dataset from website and upload to Google Cloud Storage
  
  ```bash
- python3 load_to_gcs.py
+ $ python3 load_to_gcs.py
  ```
 
 ## Step3: Create BigQuery Dataset and external table. Note: Data in GCS must be in the same region with dataset region.(Biglake table can process cross region query)
 
     ```bash
-    bq mk --dataset --location=australia-southeast1 dez-jimmyh:dez_hw3_tripdata
+    $ bq mk --dataset --location=australia-southeast1 dez-jimmyh:dez_hw3_tripdata
     ```
 
     ```bash
-    bq mk --table --external_table_definition=/home/vice/DEZ/week3/hw3_ext_schema_def.json --location=australia-
+    $ bq mk --table --external_table_definition=/home/vice/DEZ/week3/hw3_ext_schema_def.json --location=australia-
     southeast1 dez_hw3_tripdata.yellow_tripdata_ext
     ```
 
 ## Step4: Create Main table in BigQuery
 
     ```bash
-    bq query --use_legacy_sql=false --location=australia-southeast1 \
+    $ bq query --use_legacy_sql=false --location=australia-southeast1 \
     'CREATE OR REPLACE TABLE dez-jimmyh.dez_hw3_tripdata.yellow_trip_main AS
     SELECT 
         MD5(CONCAT(
@@ -160,11 +160,11 @@ What is the estimated amount of data that will be read when this query is execut
 **Ans: 0 MB for the External Table and 155.12 MB for the Materialized Table**
 
 ```bash
-bq query --dry_run --use_legacy_sql=false '
+$ bq query --dry_run --use_legacy_sql=false '
 SELECT COUNT(DISTINCT PULocationID) FROM `dez-jimmyh.dez_hw3_tripdata.yellow_trip_main`' 
 # Query successfully validated. Assuming the tables are not modified, running this query will process 162656744 bytes of data.
 
-bq query --dry_run --use_legacy_sql=false '
+$ bq query --dry_run --use_legacy_sql=false '
 SELECT COUNT(DISTINCT PULocationID) FROM `dez-jimmyh.dez_hw3_tripdata.yellow_tripdata_ext`' 
 # Query successfully validated. Assuming the tables are not modified, running this query will process lower bound of 0 bytes of data.
 ```
@@ -187,7 +187,7 @@ Q4: How many records have a fare_amount of 0?
 **Ans: 8333**
 
 ```bash
-bq query --use_legacy_sql=false 'SELECT COUNT(unique_row_id) FROM `dez-jimmyh.dez_hw3_tripdata.yellow_trip_m
+$ bq query --use_legacy_sql=false 'SELECT COUNT(unique_row_id) FROM `dez-jimmyh.dez_hw3_tripdata.yellow_trip_m
 ain` WHERE fare_amount=0'
 +------+
 | f0_  |
@@ -201,7 +201,7 @@ Q5: What is the best strategy to make an optimized table in Big Query if your qu
 **Ans: Partition by tpep_dropoff_datetime and Cluster on VendorID**
 
 ```bash
-bq query --use_legacy_sql=false --location=australia-southeast1 \
+$ bq query --use_legacy_sql=false --location=australia-southeast1 \
 'CREATE TABLE `dez-jimmyh.dez_hw3_tripdata.yellow_trip_partition_cluster`
 PARTITION BY DATE(tpep_dropoff_datetime)
 CLUSTER BY VendorID AS
@@ -214,10 +214,10 @@ Use the materialized table you created earlier in your from clause and note the 
 **Ans: 310.24 MB for non-partitioned table and 26.84 MB for the partitioned table**
 
 ```bash
-bq query --dry_run --use_legacy_sql=false 'SELECT COUNT(DISTINCT VendorID) FROM `dez-jimmyh.dez_hw3_tripdata.yellow_trip_main` WHERE tpep_dropoff_datetime BETWEEN "2024-03-01" and "2024-03-15";'
+$ bq query --dry_run --use_legacy_sql=false 'SELECT COUNT(DISTINCT VendorID) FROM `dez-jimmyh.dez_hw3_tripdata.yellow_trip_main` WHERE tpep_dropoff_datetime BETWEEN "2024-03-01" and "2024-03-15";'
 # Query successfully validated. Assuming the tables are not modified, running this query will process 325313488 bytes of data.
 
-bq query --dry_run --use_legacy_sql=false 'SELECT COUNT(DISTINCT VendorID) FROM `dez-jimmyh.dez_hw3_tripdata.yellow_trip_partition_cluster` WHERE tpep_dropoff_datetime BETWEEN "2024-03-01" and "2024-03-15";'
+$ bq query --dry_run --use_legacy_sql=false 'SELECT COUNT(DISTINCT VendorID) FROM `dez-jimmyh.dez_hw3_tripdata.yellow_trip_partition_cluster` WHERE tpep_dropoff_datetime BETWEEN "2024-03-01" and "2024-03-15";'
 # Query successfully validated. Assuming the tables are not modified, running this query will process upper bound of 28141776 bytes of data.
 ```
 
@@ -237,6 +237,6 @@ Q9: Write a SELECT count(*) query FROM the materialized table you created. How m
 **Ans: 0 Bytes. This query is getting answered from metadata tables, hence no cost. If we use some filter condition or use some actual column in the group by, it will incur cost.**
 
 ```bash
-bq query --dry_run --use_legacy_sql=false 'SELECT COUNT(*) FROM `dez-jimmyh.dez_hw3_tripdata.yellow_trip_main`'
+$ bq query --dry_run --use_legacy_sql=false 'SELECT COUNT(*) FROM `dez-jimmyh.dez_hw3_tripdata.yellow_trip_main`'
 # Query successfully validated. Assuming the tables are not modified, running this query will process 0 bytes of data.
 ```
