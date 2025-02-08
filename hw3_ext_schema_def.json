@@ -1,0 +1,11 @@
+{
+  "parquetOptions": {
+    "enableListInference": false,
+    "enumAsString": false,
+    "mapTargetType": null
+  },
+  "sourceFormat": "PARQUET",
+  "sourceUris": [
+    "gs://dez-jimmyh-hw3/yellow_tripdata_2024-0*.parquet"
+  ]
+}
